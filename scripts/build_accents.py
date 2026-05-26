@@ -48,11 +48,42 @@ def recolor(src_name, mode):
     print(f"wrote {dst}")
 
 
+def build_clean_highlight():
+    """Replace the upstream highlight_c with a proper stretchable middle piece,
+    and add highlight_e so the box has a real right edge.
+
+    The upstream highlight_c.png baked a fixed-width white "L" frame into the
+    center tile, so GRUB stretching it for longer menu items distorted the
+    decoration. A clean 9-slice keeps borders in dedicated edge tiles.
+    """
+    item_h = 33  # must match theme.txt item_height
+    border = (0xBC, 0xF7, 0xB2, 255)  # match the pale green of highlight_w
+
+    # highlight_c: top + bottom row colored, middle transparent
+    c_w = 4
+    c = Image.new("RGBA", (c_w, item_h), (0, 0, 0, 0))
+    cpx = c.load()
+    for x in range(c_w):
+        cpx[x, 0] = border
+        cpx[x, item_h - 1] = border
+    c.save(DST_DIR / "highlight_c.png")
+    print(f"wrote {DST_DIR / 'highlight_c.png'}")
+
+    # highlight_e: 2px-wide vertical line as the right edge
+    e_w = 2
+    e = Image.new("RGBA", (e_w, item_h), (0, 0, 0, 0))
+    epx = e.load()
+    for y in range(item_h):
+        for x in range(e_w):
+            epx[x, y] = border
+    e.save(DST_DIR / "highlight_e.png")
+    print(f"wrote {DST_DIR / 'highlight_e.png'}")
+
+
 def main():
-    # The bordered "C" stretches are mostly dark with thin teal/red edges
-    recolor("highlight_c.png", "teal_to_pale_green")
     recolor("highlight_w.png", "teal_to_pale_green")
     recolor("progress_highlight_c.png", "red_to_green")
+    build_clean_highlight()
 
 
 if __name__ == "__main__":
