@@ -3,8 +3,10 @@ import colorsys
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
-SRC = Path(__file__).resolve().parents[1] / "ROG_GRUB_Theme" / "ROG" / "background.png"
-DST = Path(__file__).resolve().parents[1] / "Razer" / "background.png"
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "ROG_GRUB_Theme" / "ROG" / "background.png"
+DST = ROOT / "Razer" / "background.png"
+SNAKE_SRC = ROOT / "assets_input" / "razer_design_labs-1920x1200.jpg"
 
 # Razer signature green (#44D62C) - HSV hue ~= 114 deg
 RAZER_GREEN = (0x44, 0xD6, 0x2C)
@@ -109,6 +111,27 @@ def main():
     draw.text((sep_x + 12, bar_y - 4), "RAZER", font=big_font, fill=RAZER_GREEN)
     # tagline below
     draw.text((sep_x + 12, bar_y + 28), "FOR GAMERS. BY GAMERS.", font=small_font, fill=RAZER_GREEN)
+
+    # ---- Overlay Razer snake artwork on the right side ----
+    # Uses luminance as alpha: black bg of the source becomes transparent so
+    # only the green snake + circuit lines composite onto the canvas.
+    if SNAKE_SRC.exists():
+        snake = Image.open(SNAKE_SRC).convert("RGB")
+        # Crop tight on the snake/circuit area, dropping empty side borders
+        snake = snake.crop((250, 50, 1500, 1150))  # 1250x1100
+        gray = snake.convert("L")
+        alpha = gray.point(lambda v: 0 if v < 25 else min(int(v * 1.6), 255))
+        snake = snake.copy()
+        snake.putalpha(alpha)
+        # Scale to ~580 wide, fits in the empty strip right of the menu frame
+        target_w = 580
+        ratio = target_w / snake.width
+        target_h = int(snake.height * ratio)
+        snake = snake.resize((target_w, target_h), Image.LANCZOS)
+        # Right-aligned with small margin, vertically centered on canvas
+        px = w - target_w - 30
+        py = (h - target_h) // 2
+        img.alpha_composite(snake, (px, py))
 
     DST.parent.mkdir(parents=True, exist_ok=True)
     img.save(DST)
