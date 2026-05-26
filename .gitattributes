@@ -1,0 +1,4 @@
+*.sh        text eol=lf
+theme.txt   text eol=lf
+*.pf2       binary
+*.png       binary

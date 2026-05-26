@@ -1,0 +1,13 @@
+# Upstream ROG theme we cloned for reference (has its own .git)
+ROG_GRUB_Theme/
+
+# Staging folder for in-progress source images
+assets_input/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
